@@ -9,70 +9,12 @@ mkdir -p logs nginx public
 touch logs/nginx-{access,error}.log
 
 #create file LEMP/nginx/default
-cat > nginx/default << EOF
-server {
-  listen 80;
+cp -f default /etc/nginx/
 
-  root /usr/share/nginx/html;
-  index index.php index.html index.html;
-
-  server_name test.loc;
-
-  location / {
-  try_files $uri /index.php$is_args$args;
-  }
-location ~ \.php$ {
-  fastcgi_split_path_info ^(.+\.php)(/.+)$;
-  fastcgi_pass phpfpm:9000;
-  fastcgi_index index.php;
-  fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-  include fastcgi_params;
-  }
-}
-EOF
 #create file LEMP/public/index.php
-cat > public/index.php << EOF
-<?php
-phpinfo();
-EOF
+cp -f index.php public/
 
 #2. create file docker-compose.yml
-cat > docker-compose.yml << EOF
-nginx:
-  image: nginx
-  ports:
-  - "80:80"
-  links:
-  - phpfpm
-  volumes:
-  - ./nginx/default:/etc/nginx/sites-available/default
-  - ./nginx/default:/etc/nginx/sites-enabled/default
-  - ./logs/nginx-error.log:/var/log/nginx/error.log
-  - ./logs/nginx-access.log:/var/log/nginx/access.log
-phpfpm:
-  image: modera/php5-fpm
-  ports:
-  - "9000:9000"
-  volumes:
-  - ./public:/usr/share/nginx/html
-mysql:
-  image: mariadb:latest
-  environment:
-  - MYSQL_ROOT_PASSWORD="admin"
-  ports:
-  - "3306:3306"
-phpmyadmin:
-  image: phpmyadmin/phpmyadmin
-  restart: always
-  links:
-  - mysql
-  ports:
-  - 8183:80
-  environment:
-  - PMA_USER=root
-  - PMA_PASSWORD="admin"
-  - PMA_ARBITRARY=1
-EOF
 
 #run docker
 docker-compose up -d
